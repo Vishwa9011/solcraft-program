@@ -1,20 +1,37 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token_interface::{mint_to, Mint, MintTo, TokenAccount, TokenInterface};
+use anchor_lang::system_program;
 
-use anchor_spl::metadata::{
-    create_metadata_accounts_v3,
-    mpl_token_metadata::types::{CollectionDetails, Creator, DataV2},
-    sign_metadata, CreateMetadataAccountsV3, Metadata, SignMetadata,
+use anchor_spl::associated_token::AssociatedToken;
+use anchor_spl::{
+    metadata::{
+        create_metadata_accounts_v3,
+        mpl_token_metadata::types::{CollectionDetails, Creator, DataV2},
+        sign_metadata, CreateMetadataAccountsV3, Metadata, SignMetadata,
+    },
+    token_interface::{mint_to, Mint, MintTo, TokenAccount, TokenInterface},
 };
 
-use crate::constants::MAX_DECIMALS;
-use crate::errors::TokenError;
+use crate::constants::{FACTORY_CONFIG_SEEDS, FACTORY_TREASURY, MAX_DECIMALS};
+use crate::errors::{FactoryError, TokenError};
+use crate::states::FactoryConfig;
 
 #[derive(Accounts)]
 #[instruction(name:String, symbol:String, uri:String, decimals:u8,supply:u64 )]
 pub struct CreateToken<'info> {
-    #[account(mut)]
-    payer: Signer<'info>,
+    #[account(
+        seeds = [FACTORY_CONFIG_SEEDS.as_bytes()],
+        bump = factory_config.bump,
+        constraint = !factory_config.paused @ FactoryError::FactoryPaused,
+    )]
+    pub factory_config: Account<'info, FactoryConfig>,
+
+    #[account(
+        mut,
+        seeds = [FACTORY_TREASURY.as_bytes()],
+        bump,
+        address = factory_config.treasury_account,
+    )]
+    pub factory_treasury: SystemAccount<'info>,
 
     #[account(
          init,
@@ -28,8 +45,8 @@ pub struct CreateToken<'info> {
     #[account(
         init,
         payer = payer,
-        token::mint = mint,
-        token::authority = payer,
+        associated_token::mint = mint,
+        associated_token::authority = payer,
     )]
     pub payer_ata: InterfaceAccount<'info, TokenAccount>,
 
@@ -42,8 +59,12 @@ pub struct CreateToken<'info> {
     /// CHECK: This account is checked by metadata smart contract
     pub metadata: UncheckedAccount<'info>,
 
+    #[account(mut)]
+    payer: Signer<'info>,
+
     pub token_program: Interface<'info, TokenInterface>,
     pub token_metadata_program: Program<'info, Metadata>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
 }
@@ -116,6 +137,17 @@ pub fn create_token(
             metadata: ctx.accounts.metadata.to_account_info(),
         },
     ))?;
+
+    system_program::transfer(
+        CpiContext::new(
+            ctx.accounts.system_program.to_account_info(),
+            system_program::Transfer {
+                from: ctx.accounts.payer.to_account_info(),
+                to: ctx.accounts.factory_treasury.to_account_info(),
+            },
+        ),
+        ctx.accounts.factory_config.creation_fee_lamports,
+    )?;
 
     Ok(())
 }

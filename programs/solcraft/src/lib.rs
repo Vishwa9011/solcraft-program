@@ -35,6 +35,10 @@ pub mod solcraft {
         instructions::factory::unpause_factory(ctx)
     }
 
+    pub fn withdraw_fees(ctx: Context<WithdrawFees>) -> Result<()> {
+        instructions::factory::withdraw_fees(ctx)
+    }
+
     pub fn create_token(
         ctx: Context<CreateToken>,
         name: String,

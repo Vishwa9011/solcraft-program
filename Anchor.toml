@@ -5,6 +5,7 @@ package_manager = "yarn"
 resolution = true
 skip-lint = false
 
+
 [programs.localnet]
 solcraft = "CADbArgTHGSsSiMJfXdtGYjQeLRf55f6QoQW7bNphicC"
 
@@ -16,4 +17,11 @@ cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 \"tests/**/*.ts\""
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 \"tests/**/*.spec.ts\""
+
+[test.validator]
+rpc_bind_address = "127.0.0.1"
+bind_address = "127.0.0.1"
+url = "https://api.mainnet-beta.solana.com"
+[[test.validator.clone]]
+address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
