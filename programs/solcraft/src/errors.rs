@@ -23,3 +23,21 @@ pub enum FactoryError {
     #[msg("No funds available to withdraw.")]
     InsufficientFundsToWithdraw,
 }
+
+#[error_code]
+pub enum FaucetError {
+    #[msg("Insufficient funds in the depositor's account.")]
+    InsufficientFunds,
+
+    #[msg("Cooldown period has not yet elapsed.")]
+    CooldownNotElapsed,
+
+    #[msg("Unauthorized action attempted.")]
+    Unauthorized,
+
+    #[msg("The provided treasury ATA does not match the faucet configuration.")]
+    InvalidTreasuryAta,
+
+    #[msg("The provided decimals exceed the maximum allowed.")]
+    ExceedsMaxDecimals,
+}

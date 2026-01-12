@@ -8,7 +8,10 @@ use anchor_spl::{
         mpl_token_metadata::types::{CollectionDetails, Creator, DataV2},
         sign_metadata, CreateMetadataAccountsV3, Metadata, SignMetadata,
     },
-    token_interface::{mint_to, Mint, MintTo, TokenAccount, TokenInterface},
+    token_2022::spl_token_2022::instruction::AuthorityType,
+    token_interface::{
+        mint_to, set_authority, Mint, MintTo, SetAuthority, TokenAccount, TokenInterface,
+    },
 };
 
 use crate::constants::{FACTORY_CONFIG_SEEDS, FACTORY_TREASURY, MAX_DECIMALS};
@@ -16,7 +19,7 @@ use crate::errors::{FactoryError, TokenError};
 use crate::states::FactoryConfig;
 
 #[derive(Accounts)]
-#[instruction(name:String, symbol:String, uri:String, decimals:u8,supply:u64 )]
+#[instruction(name:String, symbol:String, uri:String, decimals:u8, supply:u64)]
 pub struct CreateToken<'info> {
     #[account(
         seeds = [FACTORY_CONFIG_SEEDS.as_bytes()],
@@ -157,6 +160,106 @@ pub fn create_token(
             },
         ),
         ctx.accounts.factory_config.creation_fee_lamports,
+    )?;
+
+    Ok(())
+}
+
+#[derive(Accounts)]
+#[instruction(amount:u64)]
+pub struct MintTokens<'info> {
+    #[account(mut)]
+    pub mint: InterfaceAccount<'info, Mint>,
+
+    #[account(
+        mut,
+        associated_token::mint = mint,
+        associated_token::authority = recipient,
+    )]
+    pub recipient_ata: InterfaceAccount<'info, TokenAccount>,
+
+    #[account(mut)]
+    pub recipient: Signer<'info>,
+
+    pub token_program: Interface<'info, TokenInterface>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+    pub system_program: Program<'info, System>,
+}
+
+pub fn mint_tokens(ctx: Context<MintTokens>, amount: u64) -> Result<()> {
+    let mint_accounts = MintTo {
+        mint: ctx.accounts.mint.to_account_info(),
+        to: ctx.accounts.recipient_ata.to_account_info(),
+        authority: ctx.accounts.recipient.to_account_info(),
+    };
+
+    let mint_ctx = CpiContext::new(ctx.accounts.token_program.to_account_info(), mint_accounts);
+
+    mint_to(mint_ctx, amount)?;
+
+    Ok(())
+}
+
+#[derive(Accounts)]
+#[instruction(new_authority: Option<Pubkey>)]
+pub struct TransferMintAuthority<'info> {
+    #[account(mut)]
+    pub mint: InterfaceAccount<'info, Mint>,
+
+    #[account(mut)]
+    pub current_authority: Signer<'info>,
+
+    pub token_program: Interface<'info, TokenInterface>,
+}
+
+pub fn transfer_mint_authority(
+    ctx: Context<TransferMintAuthority>,
+    new_authority: Option<Pubkey>,
+) -> Result<()> {
+    let set_authority_ctx = CpiContext::new(
+        ctx.accounts.token_program.to_account_info(),
+        SetAuthority {
+            account_or_mint: ctx.accounts.mint.to_account_info(),
+            current_authority: ctx.accounts.current_authority.to_account_info(),
+        },
+    );
+
+    set_authority(
+        set_authority_ctx,
+        AuthorityType::MintTokens,
+        new_authority.into(),
+    )?;
+
+    Ok(())
+}
+
+#[derive(Accounts)]
+#[instruction(new_authority: Option<Pubkey>)]
+pub struct TransferFreezeAuthority<'info> {
+    #[account(mut)]
+    pub mint: InterfaceAccount<'info, Mint>,
+
+    #[account(mut)]
+    pub current_authority: Signer<'info>,
+
+    pub token_program: Interface<'info, TokenInterface>,
+}
+pub fn transfer_freeze_authority(
+    ctx: Context<TransferFreezeAuthority>,
+    new_authority: Option<Pubkey>,
+) -> Result<()> {
+    let set_authority_ctx = CpiContext::new(
+        ctx.accounts.token_program.to_account_info(),
+        SetAuthority {
+            account_or_mint: ctx.accounts.mint.to_account_info(),
+            current_authority: ctx.accounts.current_authority.to_account_info(),
+        },
+    );
+
+    set_authority(
+        set_authority_ctx,
+        AuthorityType::FreezeAccount,
+        new_authority.into(),
     )?;
 
     Ok(())

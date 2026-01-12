@@ -8,7 +8,7 @@ describe("Factory", () => {
   before(async () => {
     // Airdrop some SOL to the user1 before tests
     await airdropSol(user1.publicKey, 2);
-    await airdropSol(user2.publicKey, 1);
+    await airdropSol(user2.publicKey, 2);
   });
 
   it("Initialized!", async () => {

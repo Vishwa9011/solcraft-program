@@ -6,6 +6,12 @@ use anchor_lang::prelude::*;
 pub const DISCRIMINATOR: usize = 8;
 
 #[constant]
+pub const FAUCET_CONFIG_SEEDS: &str = "faucet_config";
+
+#[constant]
+pub const FAUCET_RECIPIENT_SEEDS: &str = "faucet_recipient";
+
+#[constant]
 pub const FACTORY_CONFIG_SEEDS: &str = "factory_config";
 
 #[constant]
