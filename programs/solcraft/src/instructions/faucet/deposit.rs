@@ -37,8 +37,8 @@ pub struct Deposit<'info> {
 }
 
 pub fn deposit(ctx: Context<Deposit>, amount: u64) -> Result<()> {
-    let depositor_ata_info = ctx.accounts.depositor_ata.amount.clone();
-    require!(depositor_ata_info >= amount, FaucetError::InsufficientFunds);
+    let depositor_balance = ctx.accounts.depositor_ata.amount.clone();
+    require!(depositor_balance >= amount, FaucetError::InsufficientFunds);
 
     transfer(
         CpiContext::new(

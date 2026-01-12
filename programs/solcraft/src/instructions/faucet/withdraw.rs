@@ -38,8 +38,8 @@ pub struct Withdraw<'info> {
 }
 
 pub fn withdraw(ctx: Context<Withdraw>, amount: u64) -> Result<()> {
-    let treasury_ata_info = ctx.accounts.treasury_ata.amount.clone();
-    require!(treasury_ata_info >= amount, FaucetError::InsufficientFunds);
+    let treasury_balance = ctx.accounts.treasury_ata.amount.clone();
+    require!(treasury_balance >= amount, FaucetError::InsufficientFunds);
 
     let seeds = &[
         FAUCET_CONFIG_SEEDS.as_bytes(),

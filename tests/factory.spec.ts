@@ -97,6 +97,8 @@ describe("Factory", () => {
 
   it("Withdraws fees!", async () => {
     const treasuryPDA = getTreasuryPDA(program);
+    const rentExemptMinimum =
+      await program.provider.connection.getMinimumBalanceForRentExemption(0);
 
     const depositIx = anchor.web3.SystemProgram.transfer({
       fromPubkey: user2.publicKey,
@@ -129,7 +131,7 @@ describe("Factory", () => {
       treasuryPDA
     );
 
-    expect(finalTreasuryBalance).to.equal(0);
+    expect(finalTreasuryBalance).to.equal(rentExemptMinimum);
     expect(finalAdminBalance).to.be.greaterThan(initialAdminBalance);
   });
 });

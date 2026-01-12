@@ -7,7 +7,6 @@ import {
   getAssociatedTokenAddress,
   getOrCreateAssociatedTokenAccount,
   mintTo,
-  ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
   getAccount,
 } from "@solana/spl-token";
@@ -77,9 +76,7 @@ describe("Faucet", () => {
     await program.methods
       .depositToFaucet(DEPOSIT_AMOUNT)
       .accounts({
-        treasuryAta,
         depositor: user1.publicKey,
-        depositorAta: user1Ata,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
       .rpc();
@@ -103,9 +100,7 @@ describe("Faucet", () => {
     await program.methods
       .withdrawFromFaucet(WITHDRAW_AMOUNT)
       .accounts({
-        treasuryAta,
         recipient: user1.publicKey,
-        recipientAta: user1Ata,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
       .rpc();
@@ -146,9 +141,7 @@ describe("Faucet", () => {
     await program.methods
       .claimFromFaucet()
       .accounts({
-        treasuryAta,
         recipient: user2.publicKey,
-        recipientAta: user2Ata,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
       .signers([user2])

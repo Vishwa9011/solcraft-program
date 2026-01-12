@@ -137,9 +137,14 @@ pub struct WithdrawFees<'info> {
 }
 
 pub fn withdraw_fees(ctx: Context<WithdrawFees>) -> Result<()> {
-    let balance = ctx.accounts.treasury_account.to_account_info().lamports(); // keep 1 lamport to keep the account alive
-    let withdraw_amount =  balance.saturating_sub(1);
-    if withdraw_amount == 0 {
+    let treasury_info = ctx.accounts.treasury_account.to_account_info();
+    let treasury_balance = treasury_info.lamports();
+
+    // Calculate the amount that can be withdrawn while keeping the treasury account rent-exempt.
+    let rent_exempt_minimum = Rent::get()?.minimum_balance(treasury_info.data_len());
+    let withdrawable_amount = treasury_balance.saturating_sub(rent_exempt_minimum);
+
+    if withdrawable_amount == 0 {
         return Ok(());
     }
 
@@ -157,7 +162,7 @@ pub fn withdraw_fees(ctx: Context<WithdrawFees>) -> Result<()> {
         },
         signer,
     );
-    system_program::transfer(cpi_ctx, balance)?;
+    system_program::transfer(cpi_ctx, withdrawable_amount)?;
 
     Ok(())
 }

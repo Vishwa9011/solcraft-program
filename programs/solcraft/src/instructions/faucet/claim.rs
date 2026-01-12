@@ -50,9 +50,9 @@ pub struct Claim<'info> {
 pub fn claim(ctx: Context<Claim>) -> Result<()> {
     let faucet_config = &ctx.accounts.faucet_config;
     let claim_amount = ctx.accounts.faucet_config.allowed_claim_amount;
-    let treasury_ata_info = ctx.accounts.treasury_ata.amount.clone();
+    let treasury_balance = ctx.accounts.treasury_ata.amount.clone();
     require!(
-        treasury_ata_info >= claim_amount,
+        treasury_balance >= claim_amount,
         FaucetError::InsufficientFunds
     );
 
