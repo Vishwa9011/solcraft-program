@@ -4,7 +4,7 @@ use anchor_spl::token_interface::{TokenAccount, TokenInterface};
 
 use crate::constants::FAUCET_CONFIG_SEEDS;
 use crate::errors::FaucetError;
-use crate::states::faucet::FaucetConfig;
+use crate::states::FaucetConfig;
 
 #[derive(Accounts)]
 #[instruction(amount: u64)]

@@ -4,7 +4,7 @@ use anchor_spl::token_interface::{TokenAccount, TokenInterface};
 
 use crate::constants::{DISCRIMINATOR, FAUCET_CONFIG_SEEDS, FAUCET_RECIPIENT_SEEDS};
 use crate::errors::FaucetError;
-use crate::states::faucet::{FaucetConfig, FaucetRecipientData};
+use crate::states::{FaucetConfig, FaucetRecipientData};
 
 #[derive(Accounts)]
 pub struct Claim<'info> {

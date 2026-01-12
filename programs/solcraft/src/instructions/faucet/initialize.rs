@@ -4,7 +4,7 @@ use anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
 
 use crate::constants::{DISCRIMINATOR, FAUCET_CONFIG_SEEDS, MAX_DECIMALS};
 use crate::errors::FaucetError;
-use crate::states::faucet::FaucetConfig;
+use crate::states::FaucetConfig;
 
 #[derive(Accounts)]
 pub struct InitializeFaucet<'info> {
