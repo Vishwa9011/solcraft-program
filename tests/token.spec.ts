@@ -1,5 +1,5 @@
 import * as anchor from "@coral-xyz/anchor";
-import { BN, min } from "bn.js";
+import { BN } from "bn.js";
 import { airdropSol, LAMPORTS_FEE, program, user1, user2 } from "./setup";
 import { TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
 
@@ -8,13 +8,6 @@ describe("Token", () => {
     // Airdrop some SOL to the user1 before tests
     await airdropSol(user1.publicKey, 2);
     await airdropSol(user2.publicKey, 1);
-
-    await program.methods
-      .initializeFactory(new BN(LAMPORTS_FEE))
-      .accounts({
-        admin: user1.publicKey,
-      })
-      .rpc();
   });
 
   it("Creates token and pays fee to factory treasury!", async () => {
@@ -25,7 +18,6 @@ describe("Token", () => {
     const TOKEN_URI = "https://example.com/token-metadata.json";
 
     const mint = anchor.web3.Keypair.generate();
-    const payerAta = anchor.web3.Keypair.generate();
 
     await program.methods
       .createToken(

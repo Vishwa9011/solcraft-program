@@ -19,4 +19,7 @@ pub enum FactoryError {
 
     #[msg("Unauthorized action attempted.")]
     Unauthorized,
+
+    #[msg("No funds available to withdraw.")]
+    InsufficientFundsToWithdraw,
 }

@@ -7,23 +7,30 @@ use crate::states::FactoryConfig;
 #[derive(Accounts)]
 #[instruction(creation_fee_lamports: u64)]
 pub struct InitializeFactory<'info> {
-    #[account(mut)] // because admin will pay for the account creation fee of factory_config
-    pub admin: Signer<'info>,
 
     #[account(
-      init_if_needed,
-      payer = admin,
-      space = DISCRIMINATOR as usize + FactoryConfig::INIT_SPACE,
-      seeds = [FACTORY_CONFIG_SEEDS.as_bytes()],
-      bump
+        init,
+        payer = admin,
+        space = DISCRIMINATOR + FactoryConfig::INIT_SPACE,
+        seeds = [FACTORY_CONFIG_SEEDS.as_bytes()],
+        bump
     )]
     pub factory_config: Account<'info, FactoryConfig>,
 
     #[account(
-      seeds = [FACTORY_TREASURY.as_bytes()],
-      bump
+        init, 
+        payer = admin,
+        space = 0,
+        seeds = [FACTORY_TREASURY.as_bytes()],
+        bump,
+        owner = system_program::ID
     )]
-    pub factory_treasury: SystemAccount<'info>,
+    /// CHECK: This is a system account to hold lamports as treasury
+    pub treasury_account: UncheckedAccount<'info>,
+
+    // Admin pays for account creation; must be mutable to debit lamports.
+    #[account(mut)]
+    pub admin: Signer<'info>,
 
     pub system_program: Program<'info, System>,
 }
@@ -37,8 +44,8 @@ pub fn initialize_factory(
     factory_config.admin = ctx.accounts.admin.key();
     factory_config.bump = ctx.bumps.factory_config;
     factory_config.paused = false;
-    factory_config.treasury_account = ctx.accounts.factory_treasury.key();
-    factory_config.treasury_bump = ctx.bumps.factory_treasury;
+    factory_config.treasury_account = ctx.accounts.treasury_account.key();
+    factory_config.treasury_bump = ctx.bumps.treasury_account;
 
     Ok(())
 }
@@ -128,8 +135,13 @@ pub struct WithdrawFees<'info> {
     pub admin: Signer<'info>,
     pub system_program: Program<'info, System>,
 }
+
 pub fn withdraw_fees(ctx: Context<WithdrawFees>) -> Result<()> {
-    let balance = ctx.accounts.treasury_account.to_account_info().lamports();
+    let balance = ctx.accounts.treasury_account.to_account_info().lamports(); // keep 1 lamport to keep the account alive
+    let withdraw_amount =  balance.saturating_sub(1);
+    if withdraw_amount == 0 {
+        return Ok(());
+    }
 
     let seeds = &[
         FACTORY_TREASURY.as_bytes(),

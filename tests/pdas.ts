@@ -7,3 +7,10 @@ export function getFactoryPDA(program: anchor.Program<Solcraft>) {
     program.programId
   )[0];
 }
+
+export function getTreasuryPDA(program: anchor.Program<Solcraft>) {
+  return anchor.web3.PublicKey.findProgramAddressSync(
+    [Buffer.from("factory_treasury")],
+    program.programId
+  )[0];
+}

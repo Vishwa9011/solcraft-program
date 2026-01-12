@@ -31,7 +31,7 @@ pub struct CreateToken<'info> {
         bump,
         address = factory_config.treasury_account,
     )]
-    pub factory_treasury: SystemAccount<'info>,
+    pub treasury_account: SystemAccount<'info>,
 
     #[account(
          init,
@@ -60,7 +60,7 @@ pub struct CreateToken<'info> {
     pub metadata: UncheckedAccount<'info>,
 
     #[account(mut)]
-    payer: Signer<'info>,
+    pub payer: Signer<'info>,
 
     pub token_program: Interface<'info, TokenInterface>,
     pub token_metadata_program: Program<'info, Metadata>,
@@ -79,7 +79,17 @@ pub fn create_token(
 ) -> Result<()> {
     require!(name.len() <= 32, TokenError::InvalidInputStringLength);
     require!(decimals <= MAX_DECIMALS, TokenError::ExceedsMaxDecimals);
+    require!(symbol.len() <= 10, TokenError::InvalidInputStringLength);
+    require!(uri.len() <= 200, TokenError::InvalidInputStringLength);
 
+    // check the balance of payer to ensure they can pay creation fee
+    let payer_lamports = ctx.accounts.payer.to_account_info().lamports();
+    require!(
+        payer_lamports >= ctx.accounts.factory_config.creation_fee_lamports,
+        FactoryError::InsufficientCreationFee
+    );
+
+    // Mint to payer's associated token account
     let mint_accounts = MintTo {
         mint: ctx.accounts.mint.to_account_info(),
         to: ctx.accounts.payer_ata.to_account_info(),
@@ -143,7 +153,7 @@ pub fn create_token(
             ctx.accounts.system_program.to_account_info(),
             system_program::Transfer {
                 from: ctx.accounts.payer.to_account_info(),
-                to: ctx.accounts.factory_treasury.to_account_info(),
+                to: ctx.accounts.treasury_account.to_account_info(),
             },
         ),
         ctx.accounts.factory_config.creation_fee_lamports,

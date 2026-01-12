@@ -1,22 +1,8 @@
-import * as anchor from "@coral-xyz/anchor";
-import { Program } from "@coral-xyz/anchor";
-import { Solcraft } from "../target/types/solcraft";
 import { BN } from "bn.js";
 import { expect } from "chai";
+import * as anchor from "@coral-xyz/anchor";
+import { getFactoryPDA, getTreasuryPDA } from "./pdas";
 import { airdropSol, LAMPORTS_FEE, user1, user2, program } from "./setup";
-
-function getFactoryPDA(program: Program<Solcraft>) {
-  return anchor.web3.PublicKey.findProgramAddressSync(
-    [Buffer.from("factory_config")],
-    program.programId
-  )[0];
-}
-function getTreasuryPDA(program: Program<Solcraft>) {
-  return anchor.web3.PublicKey.findProgramAddressSync(
-    [Buffer.from("factory_treasury")],
-    program.programId
-  )[0];
-}
 
 describe("Factory", () => {
   before(async () => {

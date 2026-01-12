@@ -1,7 +1,9 @@
 use anchor_lang::prelude::*;
 
-#[constant]
-pub const DISCRIMINATOR: u8 = 8;
+//NOTE: if we don't need the constant in client side, we can remove the #[constant] attribute
+
+// Discriminator size for accounts
+pub const DISCRIMINATOR: usize = 8;
 
 #[constant]
 pub const FACTORY_CONFIG_SEEDS: &str = "factory_config";
